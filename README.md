@@ -1,5 +1,19 @@
 # TFRecord Viewer
 
+
+### *** new feature -> random-sampling for large datasets.
+
+## Usage
+
+```
+python3 tfviewer.py train.record --port 5000 --max-images=100 --random-sampling
+```
+
+<br/>
+<hr/>
+<br/>
+
+
 "How about checking your data before going deeper?"
 
 Use TFRecord Viewer to browse contents of TFRecords with object detection/classification annotations.

@@ -2,6 +2,7 @@
 import sys
 import io
 import argparse
+import random
 
 import tensorflow as tf
 from flask import Flask, render_template, send_file
@@ -34,6 +35,10 @@ parser.add_argument("-v", "--verbose", help="increase output verbosity",
 
 parser.add_argument('--overlay', type=str, default="detection",
                     help='Overlay to display. (detection/classification/none)')
+
+
+parser.add_argument('--random-sampling', action='store_true',
+                    help='shuffle records')
 
 
 #######################################
@@ -69,7 +74,7 @@ captions = []
 bboxes = []
 
 
-def preload_images(max_images):
+def preload_images(max_images, random_sampling):
   """ 
   Load images to be displayed in the browser gallery.
 
@@ -86,11 +91,19 @@ def preload_images(max_images):
   except:
     tf_record_iterator = tf.compat.v1.python_io.tf_record_iterator
   
-
-
   for tfrecord_path in args.tfrecords:
     print("Filename: ", tfrecord_path)
-    for i, record in enumerate(tf_record_iterator(tfrecord_path)):
+
+    #added shuffle for random sampling!    
+    tfrecords = list()
+
+    for record in tf_record_iterator(tfrecord_path):
+      tfrecords.append(record)
+    if random_sampling:
+      random.shuffle(tfrecords)
+
+    for i, record in enumerate(tfrecords):
+
       if args.verbose: print("######################### Record", i, "#########################")
       example = tf.train.Example()
       example.ParseFromString(record)
@@ -114,6 +127,7 @@ def preload_images(max_images):
 
 @app.route('/')
 def frontpage():
+  
   html = ""
   for i,filename in enumerate(filenames):
     html += '<img data-u="image" src="image/%s" data-caption="%s" />\n' % (i, captions[i])
@@ -145,7 +159,7 @@ def add_header(r):
 
 if __name__ == "__main__":
   print("Pre-loading up to %d examples.." % args.max_images)
-  count = preload_images(args.max_images)
+  count = preload_images(args.max_images, args.random_sampling)
   print("Loaded %d examples" % count)
   app.run(host=args.host, port=args.port)
 
